@@ -19,9 +19,12 @@
 #define NOMINMAX
 #include <Windows.h>
 
+const int INFINITE_NUM = 2147483647;
+const std::string INFINITE_STRING = "OO";
+
 struct Verticle
 {
-    int mark;
+    int label;
     int prevVerticle;
 };
 
@@ -29,9 +32,6 @@ int ClearInputBuffer();
 int PrintMenu();
 int MenuInput();
 int PrintSteps(std::vector<Verticle> tempVerticles, std::vector<Verticle> endVerticle);
-
-const int INFINITE_NUM = 2147483647;
-const std::string INFINITE_STRING = "OO";
 
 int ChangeLocalization()
 {
@@ -136,12 +136,12 @@ int SetTempMarks(int verticle, std::vector<Verticle> endVerticles, std::vector<V
     {
         if (i != verticle && adjencyMatrix[verticle][i] != 0) 
         {
-            min = MinNum(endVerticles[verticle].mark, adjencyMatrix[verticle][i]);
-            max = MaxNum(min, tempVerticles[i].mark);
+            min = MinNum(endVerticles[verticle].label, adjencyMatrix[verticle][i]);
+            max = MaxNum(min, tempVerticles[i].label);
 
-            if (tempVerticles[i].mark < max)
+            if (tempVerticles[i].label < max)
             {
-                tempVerticles[i].mark = max;
+                tempVerticles[i].label = max;
                 tempVerticles[i].prevVerticle = verticle;
             }
                 
@@ -160,9 +160,9 @@ int FindMaxVerticle(std::vector<Verticle> endVerticles, std::vector<Verticle> te
 
     for (int i = 1; i < tempVerticles.size(); ++i)
     {
-        if (tempVerticles[i].mark >= max && isNotVisited(endVerticles[i].mark))
+        if (tempVerticles[i].label >= max && isNotVisited(endVerticles[i].label))
         {
-            max = tempVerticles[i].mark;
+            max = tempVerticles[i].label;
             maxVerticleNum = i;
         }
     }
@@ -177,13 +177,13 @@ std::vector<Verticle> FindMaxWeight(int routeBegin, int routeEnd, std::vector<st
     for (int i = 0; i < adjencyMatrix.size(); ++i) 
     {   
         Verticle newVerticle;
-        newVerticle.mark = -1;
+        newVerticle.label = -1;
         newVerticle.prevVerticle = 0;
 
         tempVerticles.push_back(newVerticle);
 
         if (i == routeBegin) 
-            tempVerticles[i].mark = INFINITE_NUM;
+            tempVerticles[i].label = INFINITE_NUM;
     }
 
     endVerticles = tempVerticles;
@@ -192,14 +192,14 @@ std::vector<Verticle> FindMaxWeight(int routeBegin, int routeEnd, std::vector<st
 
     PrintSteps(tempVerticles, endVerticles);
 
-    while (endVerticles[routeEnd].mark == -1)
+    while (endVerticles[routeEnd].label == -1)
     {
         SetTempMarks(lastVisitedVerticle, endVerticles, tempVerticles, adjencyMatrix);
         PrintSteps(tempVerticles, endVerticles);
         lastVisitedVerticle = FindMaxVerticle(endVerticles, tempVerticles);
         endVerticles[lastVisitedVerticle] = tempVerticles[lastVisitedVerticle];
 
-        if (endVerticles[lastVisitedVerticle].mark == -1)
+        if (endVerticles[lastVisitedVerticle].label == -1)
             return endVerticles;
 
         if (lastVisitedVerticle == routeEnd)
@@ -217,18 +217,18 @@ int PrintSteps(std::vector<Verticle> tempVerticles, std::vector<Verticle> endVer
     std::cout << "|";
     for (int i = 1; i < tempVerticles.size(); ++i)
     {   
-        if (endVerticles[i].mark == INFINITE_NUM)
+        if (endVerticles[i].label == INFINITE_NUM)
         {
             std::cout << "C " << INFINITE_STRING;
         }
-        else if (endVerticles[i].mark != -1)
+        else if (endVerticles[i].label != -1)
         {
-            std::cout << "C " << endVerticles[i].mark << '(' << endVerticles[i].prevVerticle << ')';
+            std::cout << "C " << endVerticles[i].label << '(' << endVerticles[i].prevVerticle << ')';
         }
         else
         {
-            std::cout << "D " << tempVerticles[i].mark;
-            if (tempVerticles[i].mark != -1)
+            std::cout << "D " << tempVerticles[i].label;
+            if (tempVerticles[i].label != -1)
                 std::cout << '(' << tempVerticles[i].prevVerticle << ')';
         }
         std::cout << "|";
@@ -241,11 +241,16 @@ int PrintSteps(std::vector<Verticle> tempVerticles, std::vector<Verticle> endVer
 
 void PrintRoute(std::vector<Verticle> route, Verticle verticle, std::map<int, std::string> citiesNames)
 {   
-    int verticleIndex;
+    std::vector<std::string> routeNames;
 
-    if (verticle.prevVerticle != 0)
-    {
+    while (verticle.prevVerticle != 0) {
+        int n = verticle.prevVerticle;
+        routeNames.push_back(citiesNames[n]);
+        verticle = route[verticle.prevVerticle];
+    }
 
+    for (auto it = routeNames.rbegin(); it != routeNames.rend(); ++it) {
+        std::cout << *it << "->";
     }
 }
 
@@ -300,14 +305,14 @@ int main(int argc, char* argv[])
             {
                 route = FindMaxWeight(routeBegin, routeEnd, weightMatrix);
 
-                if (route[routeEnd].mark == -1)
+                if (route[routeEnd].label == -1)
                 {
                     std::cout << "Дороги из " << citiesNamesMap[routeBegin] << " в " << citiesNamesMap[routeEnd] << " не существует, попробуйте другой маршрут";
                     std::cout << std::endl;
                 }     
                 else
                 {
-                    std::cout << "Максимальный груз из города " << citiesNamesMap[routeBegin] << " в " << citiesNamesMap[routeEnd] << " = " << route[routeEnd].mark;
+                    std::cout << "Максимальный груз из города " << citiesNamesMap[routeBegin] << " в " << citiesNamesMap[routeEnd] << " = " << route[routeEnd].label;
                     std::cout << std::endl;
 
                     std::cout << "Маршрут: ";
@@ -358,11 +363,4 @@ int MenuInput()
     std::cin >> mode;
     
     return mode;
-}
-
-int ModesActions()
-{
-
-
-    return 0;
 }

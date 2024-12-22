@@ -1,3 +1,2 @@
 ﻿  Lab4_graphs.cpp
-d:\C_labs\Lab4_graphs\Lab4_graphs.cpp(246,5): warning C4267: инициализация: преобразование из "size_t" в "int"; возможна потеря данных
-  Lab4_graphs.vcxproj -> d:\C_labs\Lab4_graphs\x64\Debug\Lab4_graphs.exe
+  Lab4_graphs.vcxproj -> D:\C_labs\Lab4_graphs\x64\Debug\Lab4_graphs.exe
