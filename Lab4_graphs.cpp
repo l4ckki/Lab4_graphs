@@ -6,8 +6,8 @@
 максимальный   груз,   который  можно  провезти  между   двумя 
 указанными городами. Проиллюстрировать в таблице по шагам этапы
 поиска (9).
-
 */
+
 #include <iostream>
 #include <string>
 #include <vector>
@@ -19,19 +19,19 @@
 #define NOMINMAX
 #include <Windows.h>
 
-const int INFINITE_NUM = 2147483647;
-const std::string INFINITE_STRING = "OO";
+const int INFINITE_NUM = 2147483647; // Максимальное значение для int
+const std::string INFINITE_SYMBOL = "OO";
 
-struct Verticle
+struct TableVerticle
 {
     int label;
-    int prevVerticle;
+    int prevTableVerticle;
 };
 
 int ClearInputBuffer();
 int PrintMenu();
 int MenuInput();
-int PrintSteps(std::vector<Verticle> tempVerticles, std::vector<Verticle> endVerticle);
+int PrintSteps(std::vector<TableVerticle> tempTableVerticles, std::vector<TableVerticle> endTableVerticle);
 
 int ChangeLocalization()
 {
@@ -44,32 +44,16 @@ int ChangeLocalization()
 
 std::map<int, std::string> ReadCityNamesFile(std::fstream& cityNamesFile)
 {   
-    std::string buffer, name, number;
+    std::string name;
     int index;
     std::map<int, std::string> verticlesNames;
 
-    while (std::getline(cityNamesFile, buffer))
+    index = 1;
+
+    while (std::getline(cityNamesFile, name))
     {   
-        name = "";
-        number = "";
-
-        for (int i = 0; i < buffer.size(); i++)
-        {
-            if (buffer[i] >= '0' && buffer[i] <= '9')
-            {
-                number += buffer[i];
-            }
-            else if (buffer[i] == ' ')
-            {
-                index = std::stoi(number);
-            }
-            else
-            {
-                name += buffer[i];
-            }
-        }
-
         verticlesNames[index] = name;
+        index++;
     }
 
     return verticlesNames;
@@ -77,15 +61,17 @@ std::map<int, std::string> ReadCityNamesFile(std::fstream& cityNamesFile)
 
 std::vector<std::vector<int>> ReadCityRoutesFile(std::fstream& citiesRoutesFile, std::map<int, std::string> map)
 {   
-    std::string buffer;
-    int startVerticle, endVerticle, weight;
+    std::string buffer, number;
+    int count, index, startTableVerticle, endTableVerticle, weight;
 
     std::vector<std::vector<int>> adjencyMatrix(map.size() + 1, std::vector<int>(map.size() + 1));
+    count = 0;
+    index = 0;
 
     while (std::getline(citiesRoutesFile, buffer))
-    {
-        std::istringstream(buffer) >> startVerticle >> endVerticle >> weight;
-        adjencyMatrix[startVerticle][endVerticle] = weight;
+    {   
+        std::istringstream(buffer) >> startTableVerticle >> endTableVerticle >> weight;
+        adjencyMatrix[startTableVerticle][endTableVerticle] = weight;
     }
 
     return adjencyMatrix;
@@ -127,7 +113,7 @@ bool isNotVisited(int verticle)
     }
 }
 
-int SetTempMarks(int verticle, std::vector<Verticle> endVerticles, std::vector<Verticle>& tempVerticles, std::vector<std::vector<int>>adjencyMatrix) 
+int SetTempMarks(int verticle, std::vector<TableVerticle> endTableVerticles, std::vector<TableVerticle>& tempTableVerticles, std::vector<std::vector<int>>adjencyMatrix) 
 {   
     int min;
     int max;
@@ -136,13 +122,13 @@ int SetTempMarks(int verticle, std::vector<Verticle> endVerticles, std::vector<V
     {
         if (i != verticle && adjencyMatrix[verticle][i] != 0) 
         {
-            min = MinNum(endVerticles[verticle].label, adjencyMatrix[verticle][i]);
-            max = MaxNum(min, tempVerticles[i].label);
+            min = MinNum(endTableVerticles[verticle].label, adjencyMatrix[verticle][i]);
+            max = MaxNum(min, tempTableVerticles[i].label);
 
-            if (tempVerticles[i].label < max)
+            if (tempTableVerticles[i].label < max)
             {
-                tempVerticles[i].label = max;
-                tempVerticles[i].prevVerticle = verticle;
+                tempTableVerticles[i].label = max;
+                tempTableVerticles[i].prevTableVerticle = verticle;
             }
                 
         }
@@ -151,85 +137,94 @@ int SetTempMarks(int verticle, std::vector<Verticle> endVerticles, std::vector<V
     return 0;
 }
 
-int FindMaxVerticle(std::vector<Verticle> endVerticles, std::vector<Verticle> tempVerticles)
+int FindMaxTableVerticle(std::vector<TableVerticle> endTableVerticles, std::vector<TableVerticle> tempTableVerticles)
 {
-    int max, maxVerticleNum;
+    int max, maxTableVerticleNum;
     
     max = 0;
-    maxVerticleNum = 0;
+    maxTableVerticleNum = 0;
 
-    for (int i = 1; i < tempVerticles.size(); ++i)
+    for (int i = 1; i < tempTableVerticles.size(); ++i)
     {
-        if (tempVerticles[i].label >= max && isNotVisited(endVerticles[i].label))
+        if (tempTableVerticles[i].label >= max && isNotVisited(endTableVerticles[i].label))
         {
-            max = tempVerticles[i].label;
-            maxVerticleNum = i;
+            max = tempTableVerticles[i].label;
+            maxTableVerticleNum = i;
         }
     }
 
-    return maxVerticleNum;
+    return maxTableVerticleNum;
 }
 
-std::vector<Verticle> FindMaxWeight(int routeBegin, int routeEnd, std::vector<std::vector<int>> adjencyMatrix)
+std::vector<TableVerticle> SetLabels(std::vector<std::vector<int>> adjencyMatrix, int routeBegin)
+{   
+    std::vector<TableVerticle> lableTable;
+
+    for (int i = 0; i < adjencyMatrix.size(); ++i)
+    {
+        TableVerticle newTableVerticle;
+        newTableVerticle.label = -1;
+        newTableVerticle.prevTableVerticle = 0;
+
+        lableTable.push_back(newTableVerticle);
+
+        if (i == routeBegin)
+            lableTable[i].label = INFINITE_NUM;
+    }
+
+    return lableTable;
+}
+
+std::vector<TableVerticle> FindMaxWeight(int routeBegin, int routeEnd, std::vector<std::vector<int>> adjencyMatrix)
 {
-    std::vector<Verticle> endVerticles, tempVerticles;
+    std::vector<TableVerticle> endTableVerticles, tempTableVerticles;
+    int lastVisitedTableVerticle;
 
-    for (int i = 0; i < adjencyMatrix.size(); ++i) 
-    {   
-        Verticle newVerticle;
-        newVerticle.label = -1;
-        newVerticle.prevVerticle = 0;
+    tempTableVerticles = SetLabels(adjencyMatrix, routeBegin);
+    endTableVerticles = tempTableVerticles;
+    lastVisitedTableVerticle = routeBegin;
 
-        tempVerticles.push_back(newVerticle);
+    PrintSteps(tempTableVerticles, endTableVerticles);
 
-        if (i == routeBegin) 
-            tempVerticles[i].label = INFINITE_NUM;
-    }
-
-    endVerticles = tempVerticles;
-    int lastVisitedVerticle = routeBegin;
-    int count = 0;
-
-    PrintSteps(tempVerticles, endVerticles);
-
-    while (endVerticles[routeEnd].label == -1)
+    while (endTableVerticles[routeEnd].label == -1)
     {
-        SetTempMarks(lastVisitedVerticle, endVerticles, tempVerticles, adjencyMatrix);
-        PrintSteps(tempVerticles, endVerticles);
-        lastVisitedVerticle = FindMaxVerticle(endVerticles, tempVerticles);
-        endVerticles[lastVisitedVerticle] = tempVerticles[lastVisitedVerticle];
+        SetTempMarks(lastVisitedTableVerticle, endTableVerticles, tempTableVerticles, adjencyMatrix);
+        PrintSteps(tempTableVerticles, endTableVerticles);
+        lastVisitedTableVerticle = FindMaxTableVerticle(endTableVerticles, tempTableVerticles);
+        endTableVerticles[lastVisitedTableVerticle] = tempTableVerticles[lastVisitedTableVerticle];
 
-        if (endVerticles[lastVisitedVerticle].label == -1)
-            return endVerticles;
+        if (endTableVerticles[lastVisitedTableVerticle].label == -1)
+            return endTableVerticles;
 
-        if (lastVisitedVerticle == routeEnd)
+        if (lastVisitedTableVerticle == routeEnd)
         {
-            PrintSteps(endVerticles, tempVerticles);
+            PrintSteps(endTableVerticles, tempTableVerticles);
         }
     }
 
-    endVerticles = tempVerticles;
-    return endVerticles;
+    endTableVerticles = tempTableVerticles;
+
+    return endTableVerticles;
 }
 
-int PrintSteps(std::vector<Verticle> tempVerticles, std::vector<Verticle> endVerticles)
+int PrintSteps(std::vector<TableVerticle> tempTableVerticles, std::vector<TableVerticle> endTableVerticles)
 {   
     std::cout << "|";
-    for (int i = 1; i < tempVerticles.size(); ++i)
+    for (int i = 1; i < tempTableVerticles.size(); ++i)
     {   
-        if (endVerticles[i].label == INFINITE_NUM)
+        if (endTableVerticles[i].label == INFINITE_NUM)
         {
-            std::cout << "C " << INFINITE_STRING;
+            std::cout << "C " << INFINITE_SYMBOL;
         }
-        else if (endVerticles[i].label != -1)
+        else if (endTableVerticles[i].label != -1)
         {
-            std::cout << "C " << endVerticles[i].label << '(' << endVerticles[i].prevVerticle << ')';
+            std::cout << "C " << endTableVerticles[i].label << '(' << endTableVerticles[i].prevTableVerticle << ')';
         }
         else
         {
-            std::cout << "D " << tempVerticles[i].label;
-            if (tempVerticles[i].label != -1)
-                std::cout << '(' << tempVerticles[i].prevVerticle << ')';
+            std::cout << "D " << tempTableVerticles[i].label;
+            if (tempTableVerticles[i].label != -1)
+                std::cout << '(' << tempTableVerticles[i].prevTableVerticle << ')';
         }
         std::cout << "|";
     }
@@ -239,14 +234,14 @@ int PrintSteps(std::vector<Verticle> tempVerticles, std::vector<Verticle> endVer
     return 0;
 }
 
-void PrintRoute(std::vector<Verticle> route, Verticle verticle, std::map<int, std::string> citiesNames)
+void PrintRoute(std::vector<TableVerticle> route, TableVerticle verticle, std::map<int, std::string> citiesNames)
 {   
     std::vector<std::string> routeNames;
 
-    while (verticle.prevVerticle != 0) {
-        int n = verticle.prevVerticle;
+    while (verticle.prevTableVerticle != 0) {
+        int n = verticle.prevTableVerticle;
         routeNames.push_back(citiesNames[n]);
-        verticle = route[verticle.prevVerticle];
+        verticle = route[verticle.prevTableVerticle];
     }
 
     for (auto it = routeNames.rbegin(); it != routeNames.rend(); ++it) {
@@ -254,11 +249,29 @@ void PrintRoute(std::vector<Verticle> route, Verticle verticle, std::map<int, st
     }
 }
 
+int PrintGraphTable(std::vector<std::vector<int>> adjencyMatrix, std::map<int, std::string> citiesNamesMap)
+{   
+    std::cout << "Заданные маршруты графа: " << std::endl << std::endl;
+    for (int i = 0; i < adjencyMatrix.size(); i++)
+    {
+        for (int j = 0; j < adjencyMatrix[i].size(); j++)
+        {   
+            if (adjencyMatrix[i][j] != 0)
+            {
+                std::cout << "Маршрут из " << citiesNamesMap[i] << "(" << i << ")";
+                std::cout << " в " << citiesNamesMap[j] << "(" << j << ")" << " равен " << adjencyMatrix[i][j] << std::endl;
+            }
+        }
+    }
+
+    return 0;
+}
+
 int main(int argc, char* argv[])
 {   
     int routeBegin, routeEnd;
     bool isUsing = true;
-    std::vector<Verticle> route;
+    std::vector<TableVerticle> route;
 
     ChangeLocalization();
 
@@ -279,7 +292,7 @@ int main(int argc, char* argv[])
     }
 
     std::map<int, std::string> citiesNamesMap = ReadCityNamesFile(citiesNamesFile);
-    std::vector<std::vector<int>> weightMatrix = ReadCityRoutesFile(citiesRoutesFile, citiesNamesMap);
+    std::vector<std::vector<int>> adjencyMatrix = ReadCityRoutesFile(citiesRoutesFile, citiesNamesMap);
 
     citiesNamesFile.close();
     citiesRoutesFile.close();
@@ -303,7 +316,9 @@ int main(int argc, char* argv[])
             }
             else if (citiesNamesMap.count(routeBegin) && citiesNamesMap.count(routeEnd))
             {
-                route = FindMaxWeight(routeBegin, routeEnd, weightMatrix);
+                route = FindMaxWeight(routeBegin, routeEnd, adjencyMatrix);
+
+                std::cout << std::endl;
 
                 if (route[routeEnd].label == -1)
                 {
@@ -313,7 +328,7 @@ int main(int argc, char* argv[])
                 else
                 {
                     std::cout << "Максимальный груз из города " << citiesNamesMap[routeBegin] << " в " << citiesNamesMap[routeEnd] << " = " << route[routeEnd].label;
-                    std::cout << std::endl;
+                    std::cout << std::endl << std::endl;
 
                     std::cout << "Маршрут: ";
                     PrintRoute(route, route[routeEnd], citiesNamesMap);
@@ -329,6 +344,11 @@ int main(int argc, char* argv[])
             std::cout << std::endl;
         }
         else if (mode == 2)
+        {
+            PrintGraphTable(adjencyMatrix, citiesNamesMap);
+            std::cout << std::endl;
+        }
+        else if (mode == 3)
         {
             isUsing = false;
         }
@@ -352,7 +372,9 @@ int ClearInputBuffer()
 int PrintMenu()
 {
     std::cout << "1. Выбрать маршрут для расчета" << std::endl;
-    std::cout << "2. Выйти из программы" << std::endl;
+    std::cout << "2. Вывести все маршруты графа" << std::endl;
+    std::cout << "3. Выйти из программы" << std::endl;
+    std::cout << std::endl;
 
     return 0;
 }
